@@ -1,60 +1,50 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from 'react';
+import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { theme, darkTheme } from '../../theme/theme';
 
-const initialState = {
-  theme: "system",
+const ThemeProviderContext = createContext({
+  theme: 'light',
   setTheme: () => null,
-};
+});
 
-const ThemeProviderContext = createContext(initialState);
+export const useTheme = () => {
+  const context = useContext(ThemeProviderContext);
+  if (context === undefined)
+    throw new Error('useTheme must be used within a ThemeProvider');
+  return context;
+};
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
-  storageKey = "vite-ui-theme",
+  defaultTheme = 'light',
+  storageKey = 'dashboard-theme',
   ...props
 }) {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem(storageKey) || defaultTheme
-  );
+  const [themeMode, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(storageKey) || defaultTheme;
+    }
+    return defaultTheme;
+  });
 
   useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
-    }
-
-    root.classList.add(theme);
-  }, [theme]);
+    localStorage.setItem(storageKey, themeMode);
+  }, [themeMode, storageKey]);
 
   const value = {
-    theme,
+    theme: themeMode,
     setTheme: (theme) => {
-      localStorage.setItem(storageKey, theme);
       setTheme(theme);
     },
   };
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
-      {children}
+      <MuiThemeProvider theme={themeMode === 'dark' ? darkTheme : theme}>
+        <CssBaseline />
+        {children}
+      </MuiThemeProvider>
     </ThemeProviderContext.Provider>
   );
 }
-
-export const useTheme = () => {
-  const context = useContext(ThemeProviderContext);
-
-  if (context === undefined)
-    throw new Error("useTheme must be used within a ThemeProvider");
-
-  return context;
-};

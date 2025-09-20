@@ -1,264 +1,228 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { 
-  Search, 
-  Plus, 
-  Filter, 
-  ArrowUpDown, 
-  ChevronLeft, 
-  ChevronRight,
-  MoreHorizontal
-} from "lucide-react";
+import { useState } from 'react';
+import {
+  Typography,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  Button,
+  Box,
+  TextField,
+  Checkbox,
+  TablePagination,
+  IconButton,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  FilterList as FilterIcon,
+  Sort as SortIcon,
+} from '@mui/icons-material';
 
 const ordersData = [
-  { 
-    id: "#CM9801", 
-    user: { name: "Natali Craig", avatar: "NC" }, 
-    project: "Landing Page", 
-    address: "Meadow Lane Oakland", 
-    date: "Just now", 
-    status: "In Progress" 
+  {
+    id: 'ORD-001',
+    customer: 'John Smith',
+    email: 'john@example.com',
+    project: 'Website Redesign',
+    address: '123 Main St, New York, NY',
+    date: '2024-01-15',
+    status: 'completed',
+    amount: '$2,500'
   },
-  { 
-    id: "#CM9802", 
-    user: { name: "Kate Morrison", avatar: "KM" }, 
-    project: "CRM Admin pages", 
-    address: "Larry San Francisco", 
-    date: "A minute ago", 
-    status: "Complete" 
+  {
+    id: 'ORD-002', 
+    customer: 'Sarah Johnson',
+    email: 'sarah@example.com',
+    project: 'Mobile App',
+    address: '456 Oak Ave, Los Angeles, CA',
+    date: '2024-01-14',
+    status: 'in-progress',
+    amount: '$5,000'
   },
-  { 
-    id: "#CM9803", 
-    user: { name: "Drew Cano", avatar: "DC" }, 
-    project: "Client Project", 
-    address: "Bagwell Avenue Ocala", 
-    date: "1 hour ago", 
-    status: "Pending" 
+  {
+    id: 'ORD-003',
+    customer: 'Mike Davis',
+    email: 'mike@example.com', 
+    project: 'E-commerce Store',
+    address: '789 Pine Rd, Chicago, IL',
+    date: '2024-01-13',
+    status: 'pending',
+    amount: '$3,200'
   },
-  { 
-    id: "#CM9804", 
-    user: { name: "Orlando Diggs", avatar: "OD" }, 
-    project: "Admin Dashboard", 
-    address: "Washburn Baton Rouge", 
-    date: "Yesterday", 
-    status: "Approved" 
-  },
-  { 
-    id: "#CM9805", 
-    user: { name: "Andi Lane", avatar: "AL" }, 
-    project: "App Landing Page", 
-    address: "Nest Lane Olivette", 
-    date: "Feb 2, 2023", 
-    status: "Rejected" 
-  },
-  { 
-    id: "#CM9801", 
-    user: { name: "Natali Craig", avatar: "NC" }, 
-    project: "Landing Page", 
-    address: "Meadow Lane Oakland", 
-    date: "Just now", 
-    status: "In Progress" 
-  },
-  { 
-    id: "#CM9802", 
-    user: { name: "Kate Morrison", avatar: "KM" }, 
-    project: "CRM Admin pages", 
-    address: "Larry San Francisco", 
-    date: "A minute ago", 
-    status: "Complete" 
-  },
-  { 
-    id: "#CM9803", 
-    user: { name: "Drew Cano", avatar: "DC" }, 
-    project: "Client Project", 
-    address: "Bagwell Avenue Ocala", 
-    date: "1 hour ago", 
-    status: "Pending" 
-  },
-  { 
-    id: "#CM9804", 
-    user: { name: "Orlando Diggs", avatar: "OD" }, 
-    project: "Admin Dashboard", 
-    address: "Washburn Baton Rouge", 
-    date: "Yesterday", 
-    status: "Approved" 
+  {
+    id: 'ORD-004',
+    customer: 'Emily Wilson',
+    email: 'emily@example.com',
+    project: 'Brand Identity',
+    address: '321 Elm St, Houston, TX',
+    date: '2024-01-12', 
+    status: 'completed',
+    amount: '$1,800'
   },
 ];
 
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'completed':
+      return 'success';
+    case 'in-progress':
+      return 'info';
+    case 'pending':
+      return 'warning';
+    default:
+      return 'default';
+  }
+};
+
 export default function Orders() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrders, setSelectedOrders] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const filteredOrders = ordersData.filter(order =>
-    order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
     order.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.address.toLowerCase().includes(searchTerm.toLowerCase())
+    order.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedOrders = filteredOrders.slice(startIndex, startIndex + itemsPerPage);
+  const handleSelectOrder = (orderId) => {
+    setSelectedOrders(prev =>
+      prev.includes(orderId)
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
 
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedOrders(paginatedOrders.map((_, index) => index));
+  const handleSelectAll = (event) => {
+    if (event.target.checked) {
+      setSelectedOrders(filteredOrders.map(order => order.id));
     } else {
       setSelectedOrders([]);
     }
   };
 
-  const handleSelectOrder = (index, checked) => {
-    if (checked) {
-      setSelectedOrders([...selectedOrders, index]);
-    } else {
-      setSelectedOrders(selectedOrders.filter(i => i !== index));
-    }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
-    <div className="flex-1 space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Order List</h1>
-      </div>
+    <Box>
+      <Typography variant="h4" className="mb-6 text-foreground font-semibold">
+        Orders
+      </Typography>
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button size="sm" className="bg-primary hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add
-              </Button>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-              <Button variant="outline" size="sm">
-                <ArrowUpDown className="h-4 w-4 mr-2" />
-                Sort
-              </Button>
-            </div>
-            <div className="flex-1 max-w-md">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Search orders..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-2">
-                    <Checkbox
-                      checked={selectedOrders.length === paginatedOrders.length}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Order ID</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">User</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Project</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Address</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-muted-foreground"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedOrders.map((order, index) => (
-                  <tr 
-                    key={`${order.id}-${index}`} 
-                    className="border-b hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="py-3 px-2">
-                      <Checkbox
-                        checked={selectedOrders.includes(index)}
-                        onCheckedChange={(checked) => handleSelectOrder(index, checked)}
-                      />
-                    </td>
-                    <td className="py-3 px-4 font-medium">{order.id}</td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                          {order.user.avatar}
-                        </div>
-                        <span className="font-medium">{order.user.name}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-muted-foreground">{order.project}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{order.address}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{order.date}</td>
-                    <td className="py-3 px-4">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="py-3 px-4">
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {/* Header Actions */}
+          <Box className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <TextField
+              placeholder="Search orders..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              variant="outlined"
+              size="small"
+              className="w-full sm:w-80"
+            />
+            
+            <Box className="flex gap-2">
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Add Order
+              </Button>
+              <IconButton>
+                <FilterIcon />
+              </IconButton>
+              <IconButton>
+                <SortIcon />
+              </IconButton>
+            </Box>
+          </Box>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-muted-foreground">
-              Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredOrders.length)} of {filteredOrders.length} entries
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = i + 1;
-                return (
-                  <Button
-                    key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentPage(pageNum)}
-                    className="w-10"
-                  >
-                    {pageNum}
-                  </Button>
-                );
-              })}
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          {/* Orders Table */}
+          <TableContainer component={Paper} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      indeterminate={selectedOrders.length > 0 && selectedOrders.length < filteredOrders.length}
+                      checked={filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length}
+                      onChange={handleSelectAll}
+                    />
+                  </TableCell>
+                  <TableCell>Order ID</TableCell>
+                  <TableCell>Customer</TableCell>
+                  <TableCell>Project</TableCell>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell>Amount</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredOrders
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((order) => (
+                    <TableRow key={order.id} hover>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={() => handleSelectOrder(order.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell>
+                        <Box>
+                          <Typography variant="body2" className="font-medium">
+                            {order.customer}
+                          </Typography>
+                          <Typography variant="caption" className="text-muted-foreground">
+                            {order.email}
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>{order.project}</TableCell>
+                      <TableCell>{order.date}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={order.status}
+                          color={getStatusColor(order.status)}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{order.amount}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredOrders.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
         </CardContent>
       </Card>
-    </div>
+    </Box>
   );
 }

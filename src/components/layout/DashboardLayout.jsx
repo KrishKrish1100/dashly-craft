@@ -1,19 +1,42 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "./AppSidebar";
-import { Navbar } from "./Navbar";
+import { useState } from 'react';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
+import { Navbar } from './Navbar';
+import { Sidebar } from './Sidebar';
 
 export default function DashboardLayout({ children }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col">
-          <Navbar />
-          <main className="flex-1 overflow-auto">
-            {children}
-          </main>
-        </div>
-      </div>
-    </SidebarProvider>
+    <Box className="min-h-screen flex bg-background">
+      {/* Desktop Sidebar */}
+      {!isMobile && (
+        <Sidebar
+          open={true}
+          variant="permanent"
+        />
+      )}
+      
+      {/* Mobile Sidebar */}
+      {isMobile && (
+        <Sidebar
+          open={sidebarOpen}
+          onClose={handleSidebarToggle}
+          variant="temporary"
+        />
+      )}
+
+      <Box className="flex-1 flex flex-col">
+        <Navbar onMenuClick={handleSidebarToggle} />
+        <Box component="main" className="flex-1 overflow-auto p-6">
+          {children}
+        </Box>
+      </Box>
+    </Box>
   );
 }
